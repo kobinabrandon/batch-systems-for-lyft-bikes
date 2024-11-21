@@ -1,0 +1,26 @@
+.env
+
+# Artifacts
+ca_chain
+certfile
+keyfile
+
+# Folders
+/.idea
+/data/cleaned
+/data/raw
+/data/transformed
+/data/geographical/rounding_indexer
+/models
+/.cometml-runs
+/Mapping attempts
+**__pycache__
+
+
+Files
+**.ipynb
+data/geographical/mixed_indexer/start_geodataframe.parquet
+data/geographical/mixed_indexer/end_geodataframe.parquet
+
+data/geographical/mixed_indexer/start_ids_and_names.json
+data/geographical/mixed_indexer/end_ids_and_names.json
