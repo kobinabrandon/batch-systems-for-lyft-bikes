@@ -39,10 +39,10 @@ class Trainer:
 
             hyperparameter_trials (int | None): the number of times that we will try to optimize the hyperparameters
         """
-        self.scenario = scenario
-        self.tune_hyperparameters = tune_hyperparameters
-        self.hyperparameter_trials = hyperparameter_trials
-        self.tuned_or_not = "Tuned" if self.tune_hyperparameters else "Untuned"
+        self.scenario: str = scenario
+        self.tune_hyperparameters: bool|None = tune_hyperparameters
+        self.hyperparameter_trials: int = hyperparameter_trials
+        self.tuned_or_not: str = "Tuned" if self.tune_hyperparameters else "Untuned"
         make_fundamental_paths()  # Ensure that all the necessary directories exist.
 
     def get_or_make_training_data(self) -> tuple[pd.DataFrame, pd.Series]:

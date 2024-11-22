@@ -656,3 +656,6 @@ if __name__ == "__main__":
     make_fundamental_paths()
     trips_2024 = DataProcessor(year=2024, for_inference=False)
     trips_2024.make_training_data(geocode=False)
+
+
+
