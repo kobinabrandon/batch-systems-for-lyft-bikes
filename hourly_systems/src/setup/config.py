@@ -7,7 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from src.setup.paths import PARENT_DIR
 
 
-load_dotenv(PARENT_DIR / ".env")
+_ = load_dotenv(PARENT_DIR / ".env")
 
 
 class GeneralConfig(BaseSettings):
@@ -34,7 +34,10 @@ class GeneralConfig(BaseSettings):
 
     backfill_days: int = 180
     current_hour: datetime = pd.to_datetime(datetime.now(tz=UTC)).floor("H")
-    displayed_scenario_names: dict = {"start": "Departures", "end": "Arrivals"} 
+    displayed_scenario_names: dict[str, str] = {"start": "Departures", "end": "Arrivals"} 
 
 
 config = GeneralConfig()
+
+cities = ["bay_area", "chicago", "washington_dc", "new_york", "portland"]
+

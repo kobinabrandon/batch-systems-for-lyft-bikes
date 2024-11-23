@@ -1,4 +1,5 @@
 import json
+from typing import final
 from tqdm import tqdm
 from loguru import logger
 from pathlib import Path
@@ -7,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 from src.setup.config import config
-from src.feature_pipeline.data_sourcing import load_raw_data
+from src.feature_pipeline.data_sourcing import DataDownloader 
 from src.feature_pipeline.mixed_indexer import run_mixed_indexer
 from src.feature_pipeline.rounding_indexer import run_rounding_indexer
 from src.feature_pipeline.feature_engineering import finish_feature_engineering
@@ -17,8 +18,10 @@ from src.setup.paths import (
 )
 
 
+@final
 class DataProcessor:
-    def __init__(self, year: int, for_inference: bool):
+    def __init__(self, city_name: str, year: int, for_inference: bool) -> None:
+
         self.station_ids = None
         self.scenarios = ["start", "end"]
         self.for_inference = for_inference
@@ -28,7 +31,9 @@ class DataProcessor:
         if for_inference:
             self.data = None  # Because the data will have been fetched from the feature store instead.
         else:
-            loaded_raw_data = list(load_raw_data(year=year))
+            downloader = DataDownloader(city_name=city_name, year=year)
+
+            loaded_raw_data = list(downloader.load_raw_data())
             self.data = pd.concat(loaded_raw_data, axis=0) 
 
     def use_custom_station_indexing(self, scenarios: list[str], data: pd.DataFrame) -> bool:
