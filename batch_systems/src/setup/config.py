@@ -37,4 +37,17 @@ class GeneralConfig(BaseSettings):
 
 
 config = GeneralConfig()
-cities = ["bay_area", "chicago", "washington_dc", "new_york", "portland"]
+cities = ["bay_area", "chicago", "washington_dc", "new_york", "portland", "columbus"]
+
+
+def proper_city_name(city_name: str) -> str:
+   
+    assert city_name in cities
+
+    if "_" not in city_name: 
+        return city_name.title()
+    elif city_name == "bay_area":
+        return "the Bay Area" 
+    else:
+        return city_name.replace("_", "").title()
+

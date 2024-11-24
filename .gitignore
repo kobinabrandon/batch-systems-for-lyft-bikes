@@ -1,1 +1,24 @@
 .env
+
+# Artifacts
+ca_chain
+certfile
+keyfile
+
+# Folders
+/.idea
+batch_systems/data/cleaned
+batch_systems/data/raw
+batch_systems/data/transformed
+batch_systems/models
+batch_systems/.cometml-runs
+**__pycache__
+
+
+Files
+**.ipynb
+**start_geodataframe.parquet
+**end_geodataframe.parquet
+
+**start_ids_and_names.json
+**end_ids_and_names.json

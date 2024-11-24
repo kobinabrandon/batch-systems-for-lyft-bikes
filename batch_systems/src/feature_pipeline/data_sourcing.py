@@ -10,16 +10,18 @@ models).
 """
 import re
 import os
-from typing import final
 import requests
 import pandas as pd
 
+from pathlib import Path
+from typing import final
 from loguru import logger
 from zipfile import ZipFile
 from datetime import datetime as dt
 from argparse import ArgumentParser
 
 from src.setup.paths import RAW_DATA_DIR, make_needed_directories
+from src.setup.config import proper_city_name
 
 
 @final
@@ -27,6 +29,7 @@ class DataDownloader:
     def __init__(self, city_name: str, year: int):  
         
         self.city_name: str = city_name.lower()
+        self.proper_city_name = proper_city_name(city_name)
         self.year = year
 
         self.service_names = {
@@ -55,23 +58,26 @@ class DataDownloader:
         months_to_query_for = range(1, end_month + 1) if months is None else months
  
         data = pd.DataFrame()
-        for month in months_to_query_for:
-            file_name = self.get_data_file_name(month=month)
-            
-            if just_download:
-                if self.data_file_exists(file_name=file_name):     
-                    logger.success(f"{file_name} is already saved to disk")
-                else:
-                    data_for_the_month = self.download_one_file_of_raw_data(month=month, keep_zipfile=False)
-            else:
-                if self.data_file_exists(file_name=file_name):
-                    logger.success(f"{file_name} is already saved to disk")
-                    data_for_the_month: pd.DataFrame = pd.read_csv(RAW_DATA_DIR/f"{file_name}/{file_name}.csv")  
-                else:
-                    data_for_the_month = self.download_one_file_of_raw_data(month=month, keep_zipfile=False)
+        logger.info(f"Searching your computer for data from {self.proper_city_name}'s. If I don't find any, I'll download it.")
         
-                data = pd.concat([data, data_for_the_month], axis=0)
-                return data
+        if self.city_has_data():
+            for month in months_to_query_for:
+                file_name = self.get_data_file_name(month=month)
+                    
+                if just_download:
+                    if self.data_file_exists(file_name=file_name):     
+                        logger.success(f"{file_name} is already saved to disk")
+                    else:
+                        data_for_the_month: pd.DataFrame = self.download_one_file_of_raw_data(month=month, keep_zipfile=False)
+                else:
+                    if self.data_file_exists(file_name=file_name):
+                        logger.success(f"{file_name} is already saved to disk")
+                        data_for_the_month: pd.DataFrame = pd.read_csv(RAW_DATA_DIR/f"{file_name}/{file_name}.csv")  
+                    else:
+                        data_for_the_month = self.download_one_file_of_raw_data(month=month, keep_zipfile=False)
+            
+                    data = pd.concat([data, data_for_the_month], axis=0)
+                    return data
 
     def city_has_data(self) -> bool:
         """
@@ -89,14 +95,18 @@ class DataDownloader:
             else:
                 system_data_url = f"https://{service_name}.com/system-data"
             
-            logger.info(f"Checking whether Lyft has published any data for {self.city_name}")
+            logger.info(f"Checking whether Lyft has published any data from {self.proper_city_name}")
             response = requests.get(url=system_data_url)
-            return True if response.status_code == 200 else False
+            
+            if response.status_code == 200:
+                return True
+            else:
+                logger.error(f"Lyft hasn't published any data for {self.proper_city_name}")
+                return False
 
         else:
-            raise Exception(
-                f"Lyft has not published any data for {self.city_name.title()}"
-            )
+            logger.error(f"Lyft isn't currently operating a bike-sharing service in this city") 
+            return False
 
     def get_data_file_name(self, month: int) -> str:
         
@@ -126,13 +136,13 @@ class DataDownloader:
             logger.error("Lyft doesn't provide data on Portland after 2020.")
         else:
             file_name: str = self.get_data_file_name(month=month)
-            return "https://" + city_name_and_url_head[self.city_name] + file_name
+            return "https://" + city_name_and_url_head[self.city_name] + file_name + ".zip"
    
     def data_file_exists(self, file_name: str):
        file_path = RAW_DATA_DIR/self.city_name/file_name
        return True if file_path.exists() else False
 
-    def download_one_file_of_raw_data(self, month: int, keep_zipfile: bool = False) -> pd.DataFrame:
+    def download_one_file_of_raw_data(self, month: int, keep_zipfile: bool = False) -> pd.DataFrame | None:
         """
         Download the data for a given year, specifying the month if necessary,
         and the file name for the downloaded file.
@@ -148,30 +158,41 @@ class DataDownloader:
             month (int, optional): the month we want data for. Defaults to None.
         """
         url: str = self.get_url_for_city_data(month=month) 
+
         zipfile_name = self.get_zipfile_name(url=url)
-       
-        # Make request for the zipfile  
-        response = requests.get(url) 
         
         # Prepare paths for the download and extraction of the zipfile 
-        file_name = zipfile_name[:-4]
-        folder_path = RAW_DATA_DIR / file_name  # Remove ".zip" from the name of the zipfile 
-        zipfile_path = RAW_DATA_DIR / zipfile_name
-        
-        # Write the zipfile to the file system
-        with open(file=zipfile_path, mode="wb") as directory:
-            _ = directory.write(response.content)
+        file_name = zipfile_name[:-4]  # Remove ".zip" from the name of the zipfile 
+        data_directory = RAW_DATA_DIR /self.city_name/ file_name 
+        zipfile_path = RAW_DATA_DIR /self.city_name/ zipfile_name
 
-        # Extract the zipfile
-        with ZipFile(file=zipfile_path, mode="r") as zipfile:
-            _ = zipfile.extract(f"{file_name}.csv", folder_path)  # Extract csv file
-        
-        if not keep_zipfile:
-            os.remove(zipfile_path)
- 
-        data_for_the_month: pd.DataFrame = pd.read_csv(RAW_DATA_DIR/f"{file_name}/{file_name}.csv")
-        return data_for_the_month
-       
+        # Make request for the zipfile  
+        try:
+            logger.info(f"Downloading {zipfile_name}")
+            response = requests.get(url) 
+            logger.success("Download successful!")
+            
+            if not Path(data_directory).exists():
+                os.mkdir(data_directory)
+
+            # Write the zipfile to the file system
+            with open(file=zipfile_path, mode="wb") as directory:
+                _ = directory.write(response.content)
+            
+            # Extract the zipfile
+            extracted_file_path = RAW_DATA_DIR /self.city_name/ file_name  
+            with ZipFile(file=zipfile_path, mode="r") as zipfile:
+                _ = zipfile.extract(f"{file_name}.csv", extracted_file_path)  # Extract csv file
+            
+            if not keep_zipfile:
+                os.remove(zipfile_path)
+     
+            data_for_the_month: pd.DataFrame = pd.read_csv(data_directory/f"{file_name}.csv")
+            return data_for_the_month
+
+        except Exception as error: 
+            logger.error(error)
+
     @staticmethod
     def get_zipfile_name(url: str) -> str:
         """
@@ -183,8 +204,8 @@ class DataDownloader:
         Returns:
             str: the name of the zipfile/raw data file to be downloaded
         """
-        pattern = r"[^/]+(.*)"  # Exclude all the characters before the first slash
-        match = re.search(pattern=pattern, string=url)
+        pattern = r"([^/]+)$"  # Exclude all the characters before the first slash
+        match = re.search(pattern, url)
 
         if match:
             return match.group(1)
