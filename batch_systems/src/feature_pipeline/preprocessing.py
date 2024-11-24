@@ -7,34 +7,32 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from argparse import ArgumentParser
 from src.setup.config import config
 from src.feature_pipeline.data_sourcing import DataDownloader 
-from src.feature_pipeline.mixed_indexer import run_mixed_indexer
-from src.feature_pipeline.rounding_indexer import run_rounding_indexer
-from src.feature_pipeline.feature_engineering import finish_feature_engineering
+#from src.feature_pipeline.mixed_indexer import run_mixed_indexer
+#from src.feature_pipeline.rounding_indexer import run_rounding_indexer
+#from src.feature_pipeline.feature_engineering import finish_feature_engineering
 
-from src.setup.paths import (
-    CLEANED_DATA, TRAINING_DATA, TIME_SERIES_DATA, MIXED_INDEXER, INFERENCE_DATA, make_fundamental_paths
-)
+from src.setup.paths import CLEANED_DATA, TRAINING_DATA, TIME_SERIES_DATA, INFERENCE_DATA, make_needed_directories 
 
 
 @final
 class DataProcessor:
     def __init__(self, city_name: str, year: int, for_inference: bool) -> None:
-
+        
         self.station_ids = None
+        self.city_name = city_name
         self.scenarios = ["start", "end"]
         self.for_inference = for_inference
-        self.start_ts_path = TIME_SERIES_DATA / "start_ts.parquet"
-        self.end_ts_path = TIME_SERIES_DATA / "end_ts.parquet"
+        self.start_ts_path = TIME_SERIES_DATA / self.city_name/ "start_ts.parquet"
+        self.end_ts_path = TIME_SERIES_DATA / self.city_name/ "end_ts.parquet"
 
         if for_inference:
             self.data = None  # Because the data will have been fetched from the feature store instead.
         else:
             downloader = DataDownloader(city_name=city_name, year=year)
-
-            loaded_raw_data = list(downloader.load_raw_data())
-            self.data = pd.concat(loaded_raw_data, axis=0) 
+            self.data = downloader.load_raw_data(just_download=False)
 
     def use_custom_station_indexing(self, scenarios: list[str], data: pd.DataFrame) -> bool:
         """
@@ -658,9 +656,17 @@ class CutoffIndexer:
 
 
 if __name__ == "__main__":
-    make_fundamental_paths()
-    trips_2024 = DataProcessor(year=2024, for_inference=False)
-    trips_2024.make_training_data(geocode=False)
+    make_needed_directories()
 
+    parser = ArgumentParser()
+    _ = parser.add_argument("--cities", nargs="+", type=str)
+    _ = parser.add_argument("--year", type=int)
 
+    args = parser.parse_args()
+    for city_name in args.cities:
+        trips_2024 = DataProcessor(year=args.year, city_name=city_name, for_inference=False)
+        try:
+            trips_2024.make_training_data(geocode=False)
+        except Exception as error:
+            logger.error(error)
 

@@ -36,6 +36,7 @@ def make_needed_directories() -> None:
     
 
     for path in tqdm(iterable=major_paths, desc="Creating data directories..."):
+
         if not Path(path).exists():
             os.mkdir(path)
         

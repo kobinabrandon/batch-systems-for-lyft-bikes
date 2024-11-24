@@ -41,7 +41,7 @@ class DataDownloader:
             "portland": "biketownpdx"
         }
   
-        assert self.city_name in self.service_names.keys(), "The named city is not part of Lyft's system"
+        assert self.city_name in self.service_names.keys(), "Lyft doesn't have a bike-sharing system in the named city"
 
     def load_raw_data(self, just_download: bool, months: list[int] | None = None) -> pd.DataFrame | None:
         """
@@ -204,7 +204,7 @@ class DataDownloader:
         Returns:
             str: the name of the zipfile/raw data file to be downloaded
         """
-        pattern = r"([^/]+)$"  # Exclude all the characters before the first slash
+        pattern = r"([^/]+)$"  # Exclude all the characters before the last slash
         match = re.search(pattern, url)
 
         if match:

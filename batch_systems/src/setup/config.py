@@ -47,7 +47,9 @@ def proper_city_name(city_name: str) -> str:
     if "_" not in city_name: 
         return city_name.title()
     elif city_name == "bay_area":
-        return "the Bay Area" 
+        return "the Bay Area"
+    elif city_name == "washington_dc":
+        return "Washington DC"
     else:
-        return city_name.replace("_", "").title()
+        return city_name.replace("_", " ").title()
 
