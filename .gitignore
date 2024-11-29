@@ -7,11 +7,11 @@ keyfile
 
 # Folders
 /.idea
-batch_systems/data/cleaned
-batch_systems/data/raw
-batch_systems/data/transformed
-batch_systems/models
-batch_systems/.cometml-runs
+/data/cleaned
+/data/raw
+/data/transformed
+/models
+/.cometml-runs
 **__pycache__
 
 

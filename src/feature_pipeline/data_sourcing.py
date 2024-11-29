@@ -28,9 +28,9 @@ from src.setup.config import proper_city_name
 class DataDownloader:
     def __init__(self, city_name: str, year: int):  
         
+        self.year = year
         self.city_name: str = city_name.lower()
         self.proper_city_name = proper_city_name(city_name)
-        self.year = year
 
         self.service_names = {
             "bay_area": "bay-wheels",
@@ -76,8 +76,9 @@ class DataDownloader:
                     else:
                         data_for_the_month = self.download_one_file_of_raw_data(month=month, keep_zipfile=False)
             
-                    data = pd.concat([data, data_for_the_month], axis=0)
-                    return data
+            data = pd.concat([data, data_for_the_month], axis=0)
+            breakpoint()
+            return data
 
     def city_has_data(self) -> bool:
         """

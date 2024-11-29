@@ -32,7 +32,7 @@ class DataProcessor:
             self.data = None  # Because the data will have been fetched from the feature store instead.
         else:
             downloader = DataDownloader(city_name=city_name, year=year)
-            self.data = downloader.load_raw_data(just_download=False)
+            self.data: pd.DataFrame = downloader.load_raw_data(just_download=False)
 
     def use_custom_station_indexing(self, scenarios: list[str], data: pd.DataFrame) -> bool:
         """
@@ -577,7 +577,7 @@ class CutoffIndexer:
         stop_position = len(self.ts_data) - 1  
         return True if stop_position >= self.input_seq_len + 1 else False
 
-    def _get_cutoff_indices(self) -> list[tuple[int, int, int]]:
+    def _get_cutoff_indices(self) -> list[tuple[int, int, int]] | list[pd.Index]:
         """
         
 
@@ -612,7 +612,7 @@ class CutoffIndexer:
 
         Returns:
         """
-        indices = []
+        indices: list[tuple[int, int, int]] = []
         while mid_index <= self.stop_position:
             index = (first_index, mid_index, last_index)
             indices.append(index)
@@ -643,7 +643,7 @@ class CutoffIndexer:
         Returns:
             list[tuple[int]]: _description_
         """
-        indices = []
+        indices: list[tuple[int, int, int]] = []
         while last_index <= self.stop_position: 
             index = (first_index, mid_index, last_index)
             indices.append(index)
