@@ -1,5 +1,5 @@
 raw-data:
-	poetry run python src/feature_pipeline/data_sourcing.py --cities chicago bay_area washington_dc columbus --year 2024 
+	poetry run python src/feature_pipeline/data_sourcing.py --cities bay_area washington_dc columbus chicago --year 2024 
 
 training-data:				
 	poetry run python src/feature_pipeline/preprocessing.py --cities washington_dc --year 2024 

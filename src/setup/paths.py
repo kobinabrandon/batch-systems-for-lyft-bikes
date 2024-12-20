@@ -33,7 +33,6 @@ def make_needed_directories() -> None:
         IMAGES_DIR, TRAINING_DATA, INFERENCE_DATA, MODELS_DIR, LOCAL_SAVE_DIR, COMET_SAVE_DIR 
         
     ]
-    
 
     for path in tqdm(iterable=major_paths, desc="Creating data directories..."):
 
@@ -41,15 +40,16 @@ def make_needed_directories() -> None:
             os.mkdir(path)
         
         # The directories that holds geographical data will have a different structure.
-        if path != GEOGRAPHICAL_DATA:
-            for city in cities:  
-                # These directories don't need subdirectories for each city
-                if path not in [PARENT_DIR, DATA_DIR, TRANSFORMED_DATA, MODELS_DIR]:
-                    if not Path(path/city).exists():
-                        os.mkdir(path/city)
-        else:
+        for city in cities:  
+            # These directories don't need subdirectories for each city
+            if path not in [PARENT_DIR, DATA_DIR, TRANSFORMED_DATA, MODELS_DIR]:
+                if not Path(path/city).exists():
+                    os.mkdir(path/city)
+
+        if path == GEOGRAPHICAL_DATA:
             for city in cities:
                 for indexer_name in ["mixed_indexer", "rounding_indexer"]:
                     indexer_path_for_city = path/city/indexer_name
                     if not Path(indexer_path_for_city).exists():
                         os.mkdir(indexer_path_for_city)
+

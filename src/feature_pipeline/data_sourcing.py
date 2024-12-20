@@ -58,7 +58,7 @@ class DataDownloader:
         months_to_query_for = range(1, end_month + 1) if months is None else months
  
         data = pd.DataFrame()
-        logger.info(f"Searching your computer for data from {self.proper_city_name}'s. If I don't find any, I'll download it.")
+        logger.info(f"Searching local directories for data from {self.proper_city_name}'s.")
         
         if self.city_has_data():
             for month in months_to_query_for:
@@ -76,13 +76,12 @@ class DataDownloader:
                     else:
                         data_for_the_month = self.download_one_file_of_raw_data(month=month, keep_zipfile=False)
             
-            data = pd.concat([data, data_for_the_month], axis=0)
-            breakpoint()
+                data = pd.concat([data, data_for_the_month], axis=0)
             return data
 
     def city_has_data(self) -> bool:
         """
-        Check whether the Lyft has provdided data for the city in question
+        Check whether the Lyft has provided data for the city in question
 
         Returns:
             bool: True if the data exists, and false if it doesn't
@@ -100,6 +99,7 @@ class DataDownloader:
             response = requests.get(url=system_data_url)
             
             if response.status_code == 200:
+                logger.success(f"There's data from {self.proper_city_name}!")
                 return True
             else:
                 logger.error(f"Lyft hasn't published any data for {self.proper_city_name}")
